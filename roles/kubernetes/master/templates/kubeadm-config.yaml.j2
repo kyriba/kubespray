@@ -8,7 +8,7 @@ auditPolicy:
   logDir: /var/log/kubernetes/audit
   logMaxAge: 2
   path: ""
-certificatesDir: {{ kube_config_dir }}/ssl
+certificatesDir: {{ kube_cert_dir }}
 clusterName: {{ cluster_name }}
 bootstrapTokens:
 - groups:
@@ -24,9 +24,9 @@ etcd:
 {% for endpoint in etcd_access_addresses.split(',') %}
   - {{ endpoint }}
 {% endfor %}
-  caFile: {{ kube_config_dir }}/ssl/etcd/ca.pem
-  certFile: {{ kube_config_dir }}/ssl/etcd/node-{{ inventory_hostname }}.pem
-  keyFile: {{ kube_config_dir }}/ssl/etcd/node-{{ inventory_hostname }}-key.pem
+  caFile: {{ kube_cert_dir }}/etcd/ca.pem
+  certFile: {{ kube_cert_dir }}/etcd/node-{{ inventory_hostname }}.pem
+  keyFile: {{ kube_cert_dir }}/etcd/node-{{ inventory_hostname }}-key.pem
 {% else %}
 etcd:
   external:
@@ -34,15 +34,15 @@ etcd:
 {% for endpoint in etcd_access_addresses.split(',') %}
       - {{ endpoint }}
 {% endfor %}
-      caFile: {{ kube_config_dir }}/ssl/etcd/ca.pem
-      certFile: {{ kube_config_dir }}/ssl/etcd/node-{{ inventory_hostname }}.pem
-      keyFile: {{ kube_config_dir }}/ssl/etcd/node-{{ inventory_hostname }}-key.pem
+      caFile: {{ kube_cert_dir }}/etcd/ca.pem
+      certFile: {{ kube_cert_dir }}/etcd/node-{{ inventory_hostname }}.pem
+      keyFile: {{ kube_cert_dir }}/etcd/node-{{ inventory_hostname }}-key.pem
 {% endif %}
 networking:
   dnsDomain: {{ dns_domain }}
   serviceSubnet: {{ kube_service_addresses }}
   podSubnet: {{ kube_pods_subnet }}
-{% if cloud_provider is defined and cloud_provider != "gce" %}
+{% if cloud_provider is defined and cloud_provider != "gce"  and kube_version | version_compare('v1.11', '<') %}
 cloudProvider: {{ cloud_provider }}
 {% endif %}
 kubeProxy:
@@ -63,6 +63,9 @@ apiServerExtraArgs:
   insecure-bind-address: {{ kube_apiserver_insecure_bind_address }}
   insecure-port: "{{ kube_apiserver_insecure_port }}"
   apiserver-count: "{{ kube_apiserver_count }}"
+{% if cloud_provider is defined and cloud_provider != "gce"  and kube_version | version_compare('v1.11', '>=') %}
+  cloud-provider: {{ cloud_provider }}
+{% endif %}
 {% if kube_version | version_compare('v1.10', '<') %}
   admission-control: {{ kube_apiserver_admission_control | join(',') }}
 {% else %}
@@ -93,7 +96,7 @@ apiServerExtraArgs:
 {%   endif %}
 {% endif %}
 {% if kube_encrypt_secret_data %}
-  experimental-encryption-provider-config: {{ kube_config_dir }}/ssl/secrets_encryption.yaml
+  experimental-encryption-provider-config: {{ kube_cert_dir }}/secrets_encryption.yaml
 {% endif %}
   storage-backend: {{ kube_apiserver_storage_backend }}
 {% if kube_api_runtime_config is defined %}
@@ -107,6 +110,9 @@ controllerManagerExtraArgs:
   node-monitor-grace-period: {{ kube_controller_node_monitor_grace_period }}
   node-monitor-period: {{ kube_controller_node_monitor_period }}
   pod-eviction-timeout: {{ kube_controller_pod_eviction_timeout }}
+{% if cloud_provider is defined and cloud_provider != "gce"  and kube_version | version_compare('v1.11', '>=') %}
+  cloud-provider: {{ cloud_provider }}
+{% endif %}
 {% if kube_feature_gates %}
   feature-gates: {{ kube_feature_gates|join(',') }}
 {% endif %}

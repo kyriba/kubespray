@@ -106,7 +106,7 @@ spec:
 {% endfor %}
   - name: etc-kube-ssl
     hostPath:
-      path: "{{ kube_config_dir }}/ssl"
+      path: "{{ kube_cert_dir }}"
   - name: kubeconfig
     hostPath:
       path: "{{ kube_config_dir }}/kube-controller-manager-kubeconfig.yaml"

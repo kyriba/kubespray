@@ -60,7 +60,7 @@ spec:
       name: {{ dir | regex_replace('^/(.*)$', '\\1' ) | regex_replace('/', '-') }}
       readOnly: true
 {% endfor %}
-    - mountPath: "{{ kube_config_dir }}/ssl"
+    - mountPath: "{{ kube_cert_dir }}"
       name: etc-kube-ssl
       readOnly: true
     - mountPath: "{{ kube_config_dir }}/kube-scheduler-kubeconfig.yaml"
@@ -82,7 +82,7 @@ spec:
 {% endfor %}
   - name: etc-kube-ssl
     hostPath:
-      path: "{{ kube_config_dir }}/ssl"
+      path: "{{ kube_cert_dir }}"
   - name: kubeconfig
     hostPath:
       path: "{{ kube_config_dir }}/kube-scheduler-kubeconfig.yaml"
