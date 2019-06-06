@@ -8,6 +8,11 @@ provider "aws" {
   region     = "${var.AWS_DEFAULT_REGION}"
 }
 
+# work around for interpolation syntax not being allowed for variable defaults
+locals {
+  aws_ami_distro_id = "${var.aws_ami_distro_id == "" ? data.aws_ami.distro.id : var.aws_ami_distro_id}"
+}
+
 data "aws_availability_zones" "available" {}
 
 /*
@@ -50,7 +55,7 @@ module "aws-iam" {
 */
 
 resource "aws_instance" "bastion-server" {
-  ami                         = "${data.aws_ami.distro.id}"
+  ami                         = "${local.aws_ami_distro_id}"
   instance_type               = "${var.aws_bastion_size}"
   count                       = "${length(var.aws_cidr_subnets_public)}"
   associate_public_ip_address = true
@@ -74,7 +79,7 @@ resource "aws_instance" "bastion-server" {
 */
 
 resource "aws_instance" "k8s-master" {
-  ami           = "${data.aws_ami.distro.id}"
+  ami           = "${local.aws_ami_distro_id}"
   instance_type = "${var.aws_kube_master_size}"
 
   count = "${var.aws_kube_master_num}"
@@ -101,7 +106,7 @@ resource "aws_elb_attachment" "attach_master_nodes" {
 }
 
 resource "aws_instance" "k8s-etcd" {
-  ami           = "${data.aws_ami.distro.id}"
+  ami           = "${local.aws_ami_distro_id}"
   instance_type = "${var.aws_etcd_size}"
 
   count = "${var.aws_etcd_num}"
@@ -121,7 +126,7 @@ resource "aws_instance" "k8s-etcd" {
 }
 
 resource "aws_instance" "k8s-worker" {
-  ami           = "${data.aws_ami.distro.id}"
+  ami           = "${local.aws_ami_distro_id}"
   instance_type = "${var.aws_kube_worker_size}"
 
   count = "${var.aws_kube_worker_num}"

@@ -36,6 +36,11 @@ data "aws_ami" "distro" {
   owners = ["595879546273"] #CoreOS
 }
 
+variable "aws_ami_distro_id" {
+  description = "aws ami for ec2; if not specified defaults to data.aws_ami.distro.id"
+  default     = ""
+}
+
 //AWS VPC Variables
 
 variable "aws_vpc_cidr_block" {
